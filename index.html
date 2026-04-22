@@ -1,0 +1,1227 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comet | Deep Space Editorial</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
+        /* === GLOBAL CSS VARIABLES & THEMES === */
+        :root {
+            --bg-base: #000000;
+            --bg-surface: #0a0a0a;
+            --bg-elevated: #121212;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --border-subtle: #1f1f1f;
+            --border-focus: #333333;
+            --accent: #FF5D00; 
+            
+            --font-display: 'Playfair Display', serif;
+            --font-sans: 'Inter', sans-serif;
+            
+            --transition-fast: 0.2s ease;
+            --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body.theme-light {
+            --bg-base: #ffffff;
+            --bg-surface: #f7f7f7;
+            --bg-elevated: #ffffff;
+            --text-main: #111111;
+            --text-muted: #666666;
+            --border-subtle: #e5e5e5;
+            --border-focus: #cccccc;
+            --accent: #D94F00;
+        }
+
+        body.theme-sepia {
+            --bg-base: #f4ecd8;
+            --bg-surface: #e8dfc8;
+            --bg-elevated: #f4ecd8;
+            --text-main: #433422;
+            --text-muted: #7a6855;
+            --border-subtle: #dcd0b8;
+            --border-focus: #c2b49a;
+            --accent: #b34200;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-base); color: var(--text-main);
+            font-family: var(--font-sans); line-height: 1.6;
+            -webkit-font-smoothing: antialiased; overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: var(--border-focus); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        a, button, input, .no-select { -webkit-tap-highlight-color: transparent; user-select: none; }
+        .selectable { user-select: text; }
+        button { cursor: pointer; font-family: inherit; }
+
+        h1, h2, h3, .display { font-family: var(--font-display); font-weight: 400; letter-spacing: 0.01em; }
+        
+        .label {
+            font-family: var(--font-sans); font-size: 0.7rem; text-transform: uppercase;
+            letter-spacing: 0.15em; color: var(--text-muted); font-weight: 600;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .tag {
+            display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; 
+            border: 1px solid var(--border-subtle); font-size: 0.75rem; text-transform: uppercase; 
+            letter-spacing: 0.05em; color: var(--text-main); background: var(--bg-surface);
+            transition: all var(--transition-fast); border-radius: 2px; cursor: pointer;
+        }
+        .tag:hover { background: var(--text-main); color: var(--bg-base); border-color: var(--text-main); }
+
+        svg { flex-shrink: 0; width: 18px; height: 18px; stroke-width: 1.5px; }
+
+        /* === HEADER === */
+        .container { max-width: 1600px; margin: 0 auto; padding: 0 4vw; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 30px 0; border-bottom: 1px solid var(--border-subtle); margin-bottom: 50px;
+            background: var(--bg-base); position: sticky; top: 0; z-index: 40;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .logo { font-size: clamp(1.8rem, 3vw, 2.2rem); color: var(--text-main); text-decoration: none; cursor: pointer; font-style: italic; transition: color var(--transition-fast); }
+        .logo:hover { color: var(--accent); }
+
+        .header-actions { display: flex; gap: 15px; align-items: center; }
+
+        .icon-btn {
+            background: var(--bg-surface); border: 1px solid var(--border-subtle);
+            color: var(--text-main); width: 42px; height: 42px; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; transition: all var(--transition-fast);
+        }
+        .icon-btn:hover { border-color: var(--border-focus); background: var(--bg-elevated); }
+
+        .cmd-k-btn {
+            display: flex; align-items: center; gap: 12px; background: var(--bg-surface);
+            border: 1px solid var(--border-subtle); color: var(--text-muted);
+            padding: 10px 16px; font-size: 0.9rem; transition: all var(--transition-fast);
+            width: 100%; max-width: 260px; justify-content: space-between; border-radius: 4px;
+        }
+        .cmd-k-btn:hover { border-color: var(--border-focus); color: var(--text-main); }
+        .cmd-k-btn kbd { background: var(--bg-elevated); border: 1px solid var(--border-subtle); padding: 2px 6px; font-size: 0.7rem; font-family: monospace; border-radius: 3px; }
+
+        /* === COMMAND PALETTE === */
+        .search-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-base); z-index: 9999; display: flex; flex-direction: column;
+            opacity: 0; pointer-events: none; transition: opacity var(--transition-fast);
+        }
+        .search-overlay.active { opacity: 1; pointer-events: auto; }
+        .search-overlay-header { display: flex; justify-content: flex-end; padding: 30px 4vw; }
+        .close-search-btn { background: none; border: none; color: var(--text-muted); display: flex; align-items: center; gap: 8px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; }
+        .close-search-btn:hover { color: var(--accent); }
+        .search-overlay-content { max-width: 900px; margin: 10vh auto 0 auto; width: 100%; padding: 0 4vw; }
+        .search-massive-input {
+            width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--border-subtle);
+            color: var(--text-main); font-family: var(--font-display); font-size: clamp(2.5rem, 6vw, 4.5rem);
+            padding-bottom: 15px; outline: none; transition: border-color var(--transition-fast);
+        }
+        .search-massive-input:focus { border-bottom-color: var(--accent); }
+        .search-massive-input::placeholder { color: var(--border-focus); }
+        .search-suggestions { margin-top: 40px; display: flex; flex-direction: column; gap: 30px; }
+        .suggestion-tags { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 15px; }
+
+        /* === HOME HERO === */
+        .hero {
+            display: grid; grid-template-columns: 1.2fr 1fr; gap: 0; margin-bottom: 60px; 
+            background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 4px;
+        }
+        .hero-media { width: 100%; height: 600px; background: var(--bg-elevated); position: relative; overflow: hidden; border-right: 1px solid var(--border-subtle); }
+        .hero-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 10s ease-out; }
+        .hero:hover .hero-media img { transform: scale(1.03); }
+        .hero-media iframe { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .hero-content { padding: 60px; display: flex; flex-direction: column; justify-content: center; }
+        .hero-title { font-size: clamp(2.5rem, 4vw, 3.5rem); line-height: 1.1; margin: 20px 0; }
+        .hero-desc { color: var(--text-muted); font-size: 1.05rem; margin-bottom: 40px; line-height: 1.8; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+
+        /* === COSMIC BIRTHDAY SECTION === */
+        .cosmic-birthday {
+            display: flex; align-items: center; justify-content: space-between; gap: 40px;
+            padding: 50px 60px; background: var(--bg-surface); border: 1px solid var(--border-subtle);
+            border-radius: 4px; margin-bottom: 80px; flex-wrap: wrap;
+        }
+        .cb-text { flex: 1; min-width: 300px; }
+        .cb-title { font-size: 2.2rem; margin-bottom: 10px; }
+        .cb-desc { color: var(--text-muted); font-size: 1rem; }
+        .cb-controls { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        .cb-input {
+            background: var(--bg-base); border: 1px solid var(--border-subtle); color: var(--text-main);
+            padding: 14px 20px; font-family: var(--font-sans); font-size: 1rem; border-radius: 4px; outline: none;
+            color-scheme: dark;
+        }
+        body.theme-light .cb-input { color-scheme: light; }
+        .cb-input:focus { border-color: var(--accent); }
+        .cb-btn {
+            background: var(--text-main); color: var(--bg-base); border: none; padding: 15px 30px;
+            font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;
+            border-radius: 4px; transition: background var(--transition-fast);
+        }
+        .cb-btn:hover { background: var(--accent); color: #fff; }
+
+        /* === TABS === */
+        .tabs {
+            display: flex; gap: 30px; margin-bottom: 40px; border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 0; overflow-x: auto; scrollbar-width: none;
+        }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab {
+            background: none; border: none; color: var(--text-muted); font-family: var(--font-sans);
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer;
+            transition: color var(--transition-fast); position: relative; padding-bottom: 15px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .tab:hover { color: var(--text-main); }
+        .tab.active { color: var(--text-main); font-weight: 600; }
+        .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px; background: var(--accent); }
+
+        /* === DYNAMIC EDITORIAL GRIDS === */
+        .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid var(--border-subtle); }
+        .section-title { font-size: clamp(1.8rem, 3vw, 2.2rem); }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); grid-auto-flow: dense; gap: 40px 30px; padding-bottom: 40px; }
+        
+        .masonry-grid { column-count: 1; column-gap: 30px; padding-bottom: 40px; }
+        @media (min-width: 768px) { .masonry-grid { column-count: 2; } }
+        @media (min-width: 1024px) { .masonry-grid { column-count: 3; } }
+        @media (min-width: 1440px) { .masonry-grid { column-count: 4; } }
+        
+        .masonry-grid .card { break-inside: avoid; margin-bottom: 30px; display: inline-block; width: 100%; }
+        .masonry-grid .card-image-wrapper { aspect-ratio: auto; } 
+
+        /* === HORIZONTAL SCROLL SECTION === */
+        .horizontal-scroll-wrapper {
+            display: flex; gap: 30px; overflow-x: auto; padding-bottom: 30px; margin-bottom: 80px;
+            scrollbar-width: none; scroll-snap-type: x mandatory;
+        }
+        .horizontal-scroll-wrapper::-webkit-scrollbar { display: none; }
+        .horizontal-scroll-wrapper .card { min-width: 320px; max-width: 320px; scroll-snap-align: start; }
+
+        /* === CARDS === */
+        .card { 
+            cursor: pointer; display: flex; flex-direction: column; height: 100%; 
+            transition: transform var(--transition-smooth); 
+            animation: fadeIn 0.5s ease forwards; opacity: 0; transform: translateY(15px);
+        }
+        .card.span-2 { grid-column: span 2; } 
+        .card:hover { transform: translateY(-6px); }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+        .card-image-wrapper {
+            width: 100%; aspect-ratio: 4/3; overflow: hidden; background: var(--bg-surface);
+            margin-bottom: 20px; position: relative; border: 1px solid var(--border-subtle);
+            transition: border-color var(--transition-fast); border-radius: 4px;
+        }
+        .card.span-2 .card-image-wrapper { aspect-ratio: 16/9; }
+        .card-image-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s ease; display: block; }
+        .card:hover .card-image-wrapper img { transform: scale(1.05); }
+        .card:hover .card-image-wrapper { border-color: var(--border-focus); }
+        
+        .card-icon-badge {
+            position: absolute; top: 12px; right: 12px; background: var(--bg-base);
+            padding: 8px; display: flex; align-items: center; justify-content: center;
+            border: 1px solid var(--border-subtle); z-index: 2; color: var(--text-main); border-radius: 2px;
+        }
+
+        .card.paper .card-image-wrapper { background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 20px; text-align: center; aspect-ratio: 4/3; }
+        .card.paper .card-image-wrapper svg.main-icon { width: 40px; height: 40px; opacity: 0.2; margin-bottom: 15px; color: var(--text-main); }
+        .card.paper .card-image-wrapper::after { content: 'OpenAlex Archive'; font-family: var(--font-sans); font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+
+        .card-title { font-size: 1.25rem; margin-bottom: 12px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; transition: color var(--transition-fast); }
+        .card.span-2 .card-title { font-size: 1.8rem; -webkit-line-clamp: 2; }
+        .card:hover .card-title { color: var(--accent); }
+        .card-meta { display: flex; justify-content: space-between; margin-bottom: 12px; border-top: 1px solid var(--border-subtle); padding-top: 12px; }
+
+        /* === ADVANCED LOADER === */
+        .loader-container { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0; width: 100%; }
+        .spinner { width: 30px; height: 30px; border: 2px solid var(--border-subtle); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .btn-load-more {
+            grid-column: 1 / -1; padding: 16px 40px; background: transparent; border: 1px solid var(--border-subtle);
+            color: var(--text-main); font-size: 0.8rem; text-transform: uppercase; border-radius: 4px;
+            letter-spacing: 0.1em; transition: all var(--transition-fast); margin: 0 auto 80px auto; display: flex; align-items: center; gap: 10px;
+        }
+        .btn-load-more:hover { background: var(--text-main); color: var(--bg-base); }
+
+        /* === UNIFIED E-READER MODAL === */
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95);
+            z-index: 1000; display: flex; justify-content: center; align-items: flex-end;
+            opacity: 0; pointer-events: none; transition: opacity var(--transition-smooth);
+        }
+        .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+
+        .modal-container {
+            width: 100%; height: 100%; background: var(--bg-base); display: flex; flex-direction: column;
+            overflow-x: hidden; overflow-y: auto; transform: translateY(100%); transition: transform var(--transition-smooth);
+            position: relative; scroll-behavior: smooth;
+        }
+        .modal-backdrop.active .modal-container { transform: translateY(0); }
+
+        .modal-header-nav {
+            position: sticky; top: 0; width: 100%; padding: 20px 4vw; display: flex; justify-content: space-between;
+            align-items: center; background: var(--bg-base); z-index: 50; border-bottom: 1px solid var(--border-subtle);
+        }
+        
+        .modal-actions { display: flex; gap: 20px; align-items: center; }
+        .modal-btn { background: none; border: none; color: var(--text-muted); display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.75rem; transition: color var(--transition-fast); }
+        .modal-btn:hover { color: var(--text-main); }
+        .toolbar-divider { width: 1px; height: 16px; background: var(--border-subtle); }
+
+        /* Pro Viewer / Cinema Mode */
+        .modal-hero { 
+            width: 100%; height: 65vh; background: var(--bg-surface); position: relative; 
+            display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--border-subtle); 
+            transition: all 0.4s ease; overflow: hidden; flex-shrink: 0; /* Fixes image disappearing on large text */
+        }
+        .modal-hero img, .modal-hero video, .modal-hero iframe { 
+            width: 100%; height: 100%; object-fit: contain; transition: transform 0.1s; 
+        }
+        
+        .btn-pro-view {
+            position: absolute; bottom: 20px; right: 20px; background: var(--bg-base); border: 1px solid var(--border-subtle);
+            color: var(--text-main); padding: 10px 15px; border-radius: 4px; display: flex; align-items: center; gap: 8px;
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; z-index: 10; transition: all 0.2s;
+        }
+        .btn-pro-view:hover { background: var(--text-main); color: var(--bg-base); }
+
+        .modal-hero.cinema-mode { 
+            height: 100vh; width: 100vw; background: #000; border-bottom: none; 
+            z-index: 9999; position: fixed; top: 0; left: 0; 
+        }
+        .modal-hero.cinema-mode .btn-pro-view { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.2); }
+        .modal-hero.cinema-mode .btn-pro-view:hover { background: rgba(255,255,255,0.3); }
+
+        .modal-hero.text-mode { background: var(--bg-surface); height: auto; padding: 100px 4vw; flex-direction: column; align-items: flex-start; }
+        .modal-hero.text-mode .display { font-size: clamp(2.5rem, 5vw, 4.5rem); line-height: 1.1; margin-bottom: 20px; max-width: 1200px; }
+
+        .modal-content-wrapper { 
+            max-width: 1200px; margin: 0 auto; padding: 80px 4vw 100px 4vw; display: grid; 
+            grid-template-columns: 1fr 300px; gap: 80px; transition: opacity 0.3s ease; 
+        }
+        .modal-content-wrapper.fade-out { opacity: 0; }
+        
+        .modal-container.focus-mode .modal-content-wrapper { grid-template-columns: 1fr; max-width: 800px; }
+        .modal-container.focus-mode .modal-sidebar { display: none; }
+
+        .modal-main-article { font-size: 1.15rem; line-height: 2; color: var(--text-main); transition: font-size 0.3s ease; }
+        .modal-main-article.text-lg { font-size: 1.35rem; line-height: 2.1; }
+        .modal-main-article.text-sm { font-size: 1rem; line-height: 1.8; }
+        
+        #modalDesc > p:first-of-type::first-letter {
+            font-family: var(--font-display); float: left; font-size: 5.5rem; line-height: 0.8;
+            padding-right: 12px; padding-top: 8px; color: var(--accent); font-weight: 600;
+        }
+
+        .audio-player-ui { display: flex; align-items: center; gap: 15px; margin-bottom: 40px; padding: 15px; border: 1px solid var(--border-subtle); border-radius: 4px; background: var(--bg-surface); }
+        .audio-btn { background: var(--text-main); color: var(--bg-base); border: none; padding: 8px 16px; border-radius: 30px; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.2s; }
+        .audio-btn:hover { background: var(--accent); color: #fff; }
+        .audio-status { font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-sans); }
+
+        .modal-sidebar { border-left: 1px solid var(--border-subtle); padding-left: 40px; }
+        .meta-block { margin-bottom: 35px; }
+        .meta-value { font-size: 0.95rem; color: var(--text-main); margin-top: 8px; display: block; line-height: 1.5; }
+
+        .btn-action {
+            display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 0; 
+            border: 1px solid var(--border-subtle); color: var(--text-main); text-decoration: none; font-size: 0.8rem;
+            text-transform: uppercase; letter-spacing: 0.1em; transition: all var(--transition-fast); width: 100%; margin-top: 20px; border-radius: 4px; background: var(--bg-surface); cursor: pointer;
+        }
+        .btn-action:hover { background: var(--text-main); color: var(--bg-base); border-color: var(--text-main); }
+        .btn-action.primary { background: var(--text-main); color: var(--bg-base); }
+        .btn-action.primary:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+        /* === RELATED CONTENT DRAWER === */
+        .related-drawer {
+            position: fixed; top: 0; right: 0; width: 100%; max-width: 400px; height: 100%;
+            background: var(--bg-surface); border-left: 1px solid var(--border-subtle);
+            z-index: 100; transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.2);
+        }
+        .related-drawer.active { transform: translateX(0); }
+        
+        .drawer-header {
+            padding: 25px 30px; border-bottom: 1px solid var(--border-subtle);
+            display: flex; justify-content: space-between; align-items: center; background: var(--bg-base);
+        }
+        .drawer-content { padding: 30px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 25px; }
+        
+        .drawer-card { display: flex; gap: 15px; cursor: pointer; transition: transform 0.2s; }
+        .drawer-card:hover { transform: translateX(-5px); }
+        .drawer-card img { width: 100px; height: 75px; object-fit: cover; border-radius: 2px; border: 1px solid var(--border-subtle); }
+        .drawer-card-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .drawer-card-title { font-size: 0.9rem; line-height: 1.4; margin-bottom: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--text-main); }
+        .drawer-card-meta { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 1024px) {
+            .hero { grid-template-columns: 1fr; }
+            .hero-media { height: 400px; border-right: none; border-bottom: 1px solid var(--border-subtle); }
+            .hero-content { padding: 40px; }
+            .cosmic-birthday { padding: 40px; flex-direction: column; align-items: flex-start; }
+            .modal-content-wrapper { grid-template-columns: 1fr; gap: 50px; }
+            .modal-sidebar { border-left: none; padding-left: 0; border-top: 1px solid var(--border-subtle); padding-top: 50px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+            .card.span-2 { grid-column: span 1; }
+        }
+        @media (max-width: 600px) {
+            .modal-sidebar { grid-template-columns: 1fr; }
+            .modal-hero { height: 40vh; }
+            .cmd-k-btn { max-width: 200px; }
+            .cmd-k-btn span { display: none; }
+            .search-massive-input { font-size: 2rem; }
+            .modal-actions .modal-btn span { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <svg style="display:none;">
+        <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></symbol>
+        <symbol id="icon-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></symbol>
+        <symbol id="icon-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></symbol>
+        <symbol id="icon-paper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></symbol>
+        <symbol id="icon-news" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></symbol>
+        <symbol id="icon-date" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></symbol>
+        <symbol id="icon-author" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></symbol>
+        <symbol id="icon-source" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></symbol>
+        <symbol id="icon-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></symbol>
+        <symbol id="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></symbol>
+        <symbol id="icon-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></symbol>
+        <symbol id="icon-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></symbol>
+        <symbol id="icon-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></symbol>
+        <symbol id="icon-play" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></symbol>
+        <symbol id="icon-stop" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12"></rect></symbol>
+        <symbol id="icon-font-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></symbol>
+        <symbol id="icon-font-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></symbol>
+        <symbol id="icon-theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></symbol>
+        <symbol id="icon-focus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></symbol>
+        <symbol id="icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></symbol>
+        <symbol id="icon-drawer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="15" y1="3" x2="15" y2="21"></line><line x1="9" y1="9" x2="15" y2="9"></line><line x1="9" y1="15" x2="15" y2="15"></line></symbol>
+    </svg>
+
+    <!-- COMMAND PALETTE -->
+    <div id="searchOverlay" class="search-overlay no-select">
+        <div class="search-overlay-header">
+            <button class="close-search-btn" onclick="closeSearch()"><svg><use href="#icon-close"></use></svg> ESC</button>
+        </div>
+        <div class="search-overlay-content">
+            <input type="text" id="cmdInput" class="search-massive-input" placeholder="Search the cosmos..." autocomplete="off">
+            
+            <div class="search-suggestions">
+                <div>
+                    <span class="label"><svg><use href="#icon-history"></use></svg> Recent Searches</span>
+                    <div class="suggestion-tags" id="recentSearchesContainer">
+                        <span class="text-muted" style="font-size:0.8rem;">No recent searches</span>
+                    </div>
+                </div>
+                <div>
+                    <span class="label"><svg><use href="#icon-search"></use></svg> Trending Topics</span>
+                    <div class="suggestion-tags">
+                        <span class="tag" onclick="executeOverlaySearch('James Webb Telescope')">James Webb</span>
+                        <span class="tag" onclick="executeOverlaySearch('Mars Perseverance Rover')">Mars Rovers</span>
+                        <span class="tag" onclick="executeOverlaySearch('Black Hole Event Horizon')">Black Holes</span>
+                        <span class="tag" onclick="executeOverlaySearch('Artemis Moon Mission')">Artemis Missions</span>
+                        <span class="tag" onclick="executeOverlaySearch('Exoplanets')">Exoplanets</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header class="no-select">
+            <div class="logo display" onclick="resetView()">Comet.</div>
+            <div class="header-actions">
+                <button class="icon-btn" onclick="cycleGlobalTheme()" title="Toggle Theme">
+                    <svg><use href="#icon-theme"></use></svg>
+                </button>
+                <button class="cmd-k-btn" onclick="openSearch()">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <svg><use href="#icon-search"></use></svg> <span>Search Archives...</span>
+                    </div>
+                    <kbd>⌘K</kbd>
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <!-- HOME VIEW -->
+            <div id="homeView">
+                <article class="hero no-select" id="featuredSection">
+                    <div class="hero-media" id="featuredMedia">
+                        <div class="loader-container"><div class="spinner"></div></div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="label" style="margin-bottom: 15px; color: var(--accent);"><svg><use href="#icon-image"></use></svg> Featured Story</div>
+                        <h1 class="hero-title display selectable" id="featuredTitle">Connecting to Archives...</h1>
+                        <p class="hero-desc selectable" id="featuredDesc">Retrieving today's featured astronomical event from international databases.</p>
+                        <span class="tag" style="width: fit-content; border-color: var(--border-focus);" onclick="openFeaturedModal()">Read Full Story</span>
+                    </div>
+                </article>
+
+                <!-- COSMIC BIRTHDAY SECTION -->
+                <div class="cosmic-birthday no-select">
+                    <div class="cb-text">
+                        <h2 class="cb-title display">The Cosmos on Your Birthday</h2>
+                        <p class="cb-desc">Enter your date of birth to discover the exact celestial event captured by NASA on that day. If APOD is unavailable, we'll retrieve a verified historical image from your birth year.</p>
+                    </div>
+                    <div class="cb-controls">
+                        <input type="date" id="dobInput" class="cb-input" min="1950-01-01">
+                        <button class="cb-btn" onclick="fetchBirthdayPhoto()" id="cbBtn">Reveal Photo</button>
+                    </div>
+                </div>
+
+                <div class="section-header no-select">
+                    <h2 class="section-title display">Deep Space Chronicles</h2>
+                    <span class="label"><svg><use href="#icon-history"></use></svg> Historical Archives</span>
+                </div>
+                <div class="horizontal-scroll-wrapper no-select" id="olderNewsGrid">
+                    <div class="loader-container"><div class="spinner"></div></div>
+                </div>
+
+                <div class="section-header no-select">
+                    <h2 class="section-title display">Curated Imagery</h2>
+                    <span class="label">NASA Library</span>
+                </div>
+                <div class="masonry-grid no-select" id="discoverGrid"></div>
+            </div>
+
+            <!-- SEARCH VIEW -->
+            <div id="searchView" class="hidden">
+                <div class="section-header no-select" style="flex-direction: column; align-items: flex-start; gap: 20px;">
+                    <span class="tag" onclick="resetView()" style="background: transparent; border-color: var(--border-focus); color: var(--text-muted);">
+                        <svg><use href="#icon-back"></use></svg> Back to Editorial Home
+                    </span>
+                    <h2 class="section-title display" id="searchTitle">Search Results</h2>
+                </div>
+                
+                <nav class="tabs no-select" id="searchTabs">
+                    <button class="tab active" data-tab="all" onclick="switchTab('all')">All Records</button>
+                    <button class="tab" data-tab="images" onclick="switchTab('images')"><svg><use href="#icon-image"></use></svg> Images</button>
+                    <button class="tab" data-tab="videos" onclick="switchTab('videos')"><svg><use href="#icon-video"></use></svg> Videos & Episodes</button>
+                    <button class="tab" data-tab="news" onclick="switchTab('news')"><svg><use href="#icon-news"></use></svg> News</button>
+                    <button class="tab" data-tab="papers" onclick="switchTab('papers')"><svg><use href="#icon-paper"></use></svg> Research Papers</button>
+                </nav>
+
+                <div class="grid no-select" id="searchGrid"></div>
+                <button id="loadMoreBtn" class="btn-load-more hidden" onclick="loadMore()">Load More Archives</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- UNIFIED E-READER MODAL -->
+    <div class="modal-backdrop no-select" id="articleModal">
+        
+        <div class="modal-container" id="modalContainer" onclick="event.stopPropagation()">
+            
+            <!-- Reader Top Nav -->
+            <div class="modal-header-nav">
+                <span class="label" id="modalNavTag"><svg id="modalNavIcon"><use href="#icon-news"></use></svg> Article</span>
+                <div class="modal-actions">
+                    <button class="modal-btn" onclick="changeFontSize(-1)" title="Decrease Font"><svg><use href="#icon-font-minus"></use></svg></button>
+                    <button class="modal-btn" onclick="changeFontSize(1)" title="Increase Font"><svg><use href="#icon-font-plus"></use></svg></button>
+                    <div class="toolbar-divider"></div>
+                    <button class="modal-btn" onclick="toggleFocusMode()" title="Focus Mode"><svg><use href="#icon-focus"></use></svg></button>
+                    <div class="toolbar-divider"></div>
+                    <button class="modal-btn" onclick="shareArticle()"><svg><use href="#icon-share"></use></svg> <span>Share</span></button>
+                    <button class="modal-btn" onclick="closeModal()"><svg><use href="#icon-close"></use></svg> <span>Close</span></button>
+                </div>
+            </div>
+
+            <!-- Media Hero -->
+            <div class="modal-hero" id="modalVisual">
+                <!-- Pro View Button injected via JS -->
+            </div>
+            
+            <!-- Content Area -->
+            <div class="modal-content-wrapper" id="modalContentWrapper">
+                <div class="modal-main-article selectable" id="modalMainArticle">
+                    <h1 class="display" id="modalTitle" style="margin-bottom: 30px; line-height: 1.2;">Title</h1>
+                    
+                    <div class="audio-player-ui no-select" id="audioPlayerUI">
+                        <button class="audio-btn" id="ttsBtn" onclick="toggleTTS()">
+                            <svg width="14" height="14" id="ttsIcon"><use href="#icon-play"></use></svg> Listen
+                        </button>
+                        <span class="audio-status" id="ttsStatus">Estimated time: <span id="readTime">0 min</span></span>
+                    </div>
+
+                    <div id="modalDesc"><p>Description goes here...</p></div>
+                </div>
+                
+                <div class="modal-sidebar selectable">
+                    <div class="meta-block">
+                        <span class="label"><svg><use href="#icon-source"></use></svg> Source / Agency</span>
+                        <span class="meta-value" id="modalSource">NASA</span>
+                    </div>
+                    <div class="meta-block">
+                        <span class="label"><svg><use href="#icon-date"></use></svg> Publication Date</span>
+                        <span class="meta-value" id="modalDate">Date</span>
+                    </div>
+                    <div class="meta-block" id="modalAuthorContainer">
+                        <span class="label"><svg><use href="#icon-author"></use></svg> Authors / Center</span>
+                        <span class="meta-value" id="modalAuthors">Various</span>
+                    </div>
+                    
+                    <div class="meta-block" style="margin-top: 40px;">
+                        <span class="label" style="margin-bottom: 15px;">Related Topics</span>
+                        <div id="modalTagsContainer" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+                    </div>
+
+                    <a href="#" target="_blank" class="btn-action primary hidden" id="modalLink">
+                        <svg><use href="#icon-link"></use></svg> Access External Resource
+                    </a>
+
+                    <button class="btn-action hidden" id="btnOpenDrawer" onclick="toggleRelatedDrawer()">
+                        <svg><use href="#icon-drawer"></use></svg> Explore Related Archives
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RELATED CONTENT DRAWER -->
+        <div class="related-drawer no-select" id="relatedDrawer" onclick="event.stopPropagation()">
+            <div class="drawer-header">
+                <span class="label"><svg><use href="#icon-history"></use></svg> Related Media</span>
+                <button class="icon-btn" style="width: 32px; height: 32px; border: none;" onclick="toggleRelatedDrawer()">
+                    <svg><use href="#icon-close"></use></svg>
+                </button>
+            </div>
+            <div class="drawer-content" id="drawerContent">
+                <div class="loader-container"><div class="spinner"></div></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // === API ENDPOINTS ===
+        const APOD_API = 'https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY';
+        const NASA_API = 'https://images-api.nasa.gov/search?';
+        const NEWS_API = 'https://api.spaceflightnewsapi.net/v4/articles/?limit=';
+        const OPENALEX_API = 'https://api.openalex.org/works?search=';
+
+        // === STATE & CACHE ===
+        const apiCache = new Map();
+        let currentQuery = '';
+        let currentTab = 'all';
+        let currentPage = 1;
+        const itemsPerPage = 12;
+        let featuredData = null;
+        let currentModalData = null;
+
+        // Browser Saved Preferences
+        let recentSearches = JSON.parse(localStorage.getItem('comet-recent-searches')) || [];
+        let currentFontSize = parseInt(localStorage.getItem('comet-font-size')) || 1; // 0: sm, 1: md, 2: lg
+        const fontClasses = ['text-sm', '', 'text-lg'];
+
+        // E-Reader State
+        let synth = window.speechSynthesis;
+        let ttsUtterance = null;
+        let isPlaying = false;
+        let preferredVoice = null;
+
+        // === DOM ELEMENTS ===
+        const homeView = document.getElementById('homeView');
+        const searchView = document.getElementById('searchView');
+        const searchOverlay = document.getElementById('searchOverlay');
+        const cmdInput = document.getElementById('cmdInput');
+        const discoverGrid = document.getElementById('discoverGrid');
+        const olderNewsGrid = document.getElementById('olderNewsGrid');
+        const searchGrid = document.getElementById('searchGrid');
+        const searchTitle = document.getElementById('searchTitle');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        
+        const modalBackdrop = document.getElementById('articleModal');
+        const modalContainer = document.getElementById('modalContainer');
+        const modalContentWrapper = document.getElementById('modalContentWrapper');
+        const modalVisual = document.getElementById('modalVisual');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDate = document.getElementById('modalDate');
+        const modalSource = document.getElementById('modalSource');
+        const modalAuthors = document.getElementById('modalAuthors');
+        const modalDesc = document.getElementById('modalDesc');
+        const modalNavIcon = document.getElementById('modalNavIcon');
+        const modalLink = document.getElementById('modalLink');
+        const modalTagsContainer = document.getElementById('modalTagsContainer');
+        const modalMainArticle = document.getElementById('modalMainArticle');
+        const readTimeEl = document.getElementById('readTime');
+        const ttsBtn = document.getElementById('ttsBtn');
+        const ttsStatus = document.getElementById('ttsStatus');
+        
+        const relatedDrawer = document.getElementById('relatedDrawer');
+        const drawerContent = document.getElementById('drawerContent');
+        const btnOpenDrawer = document.getElementById('btnOpenDrawer');
+
+        // === INITIALIZATION ===
+        window.onload = () => { 
+            initGlobalTheme();
+            applySavedFontSize();
+            updateRecentSearchesUI();
+            fetchFeatured();
+            fetchCurated(); 
+            fetchOlderNews();
+            setupSearchEngine();
+            initVoices();
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dobInput').setAttribute('max', today);
+        };
+
+        // === CACHED FETCH WRAPPER ===
+        async function fetchWithCache(url) {
+            if (apiCache.has(url)) return apiCache.get(url);
+            const response = await fetch(url);
+            const data = await response.json();
+            apiCache.set(url, data);
+            return data;
+        }
+
+        // === GLOBAL THEME & PREFERENCES ===
+        const themes = ['theme-dark', 'theme-light', 'theme-sepia'];
+        function initGlobalTheme() {
+            const savedTheme = localStorage.getItem('comet-theme') || 'theme-dark';
+            document.body.className = savedTheme === 'theme-dark' ? '' : savedTheme;
+        }
+
+        function cycleGlobalTheme() {
+            let currentTheme = document.body.className || 'theme-dark';
+            let nextIndex = (themes.indexOf(currentTheme) + 1) % themes.length;
+            let nextTheme = themes[nextIndex];
+            
+            document.body.className = nextTheme === 'theme-dark' ? '' : nextTheme;
+            localStorage.setItem('comet-theme', nextTheme);
+        }
+
+        function resetView() {
+            searchView.classList.add('hidden');
+            homeView.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showLoader(container) {
+            container.innerHTML = `<div class="loader-container"><div class="spinner"></div><span class="label">Accessing Global Archives...</span></div>`;
+        }
+
+        // === SEARCH ENGINE ===
+        function setupSearchEngine() {
+            document.addEventListener('keydown', (e) => {
+                if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                    e.preventDefault();
+                    openSearch();
+                }
+                if (e.key === 'Escape') {
+                    if (searchOverlay.classList.contains('active')) closeSearch();
+                    else if (relatedDrawer.classList.contains('active')) toggleRelatedDrawer();
+                    else if (modalVisual.classList.contains('cinema-mode')) toggleProViewer();
+                    else if (modalBackdrop.classList.contains('active')) closeModal();
+                }
+            });
+            cmdInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const query = cmdInput.value.trim();
+                    if (query) executeOverlaySearch(query);
+                }
+            });
+        }
+
+        function openSearch() {
+            searchOverlay.classList.add('active');
+            setTimeout(() => cmdInput.focus(), 100);
+        }
+
+        function closeSearch() {
+            searchOverlay.classList.remove('active');
+            cmdInput.value = '';
+            cmdInput.blur();
+        }
+
+        function updateRecentSearchesUI() {
+            const container = document.getElementById('recentSearchesContainer');
+            if(recentSearches.length === 0) {
+                container.innerHTML = '<span class="text-muted" style="font-size:0.8rem;">No recent searches</span>';
+                return;
+            }
+            container.innerHTML = recentSearches.map(q => `<span class="tag" onclick="executeOverlaySearch('${q}')"><svg><use href="#icon-history"></use></svg> ${q}</span>`).join('');
+        }
+
+        function saveSearchQuery(query) {
+            if(!recentSearches.includes(query)) {
+                recentSearches.unshift(query);
+                if(recentSearches.length > 6) recentSearches.pop();
+                localStorage.setItem('comet-recent-searches', JSON.stringify(recentSearches));
+                updateRecentSearchesUI();
+            }
+        }
+
+        function executeOverlaySearch(query) {
+            closeSearch();
+            saveSearchQuery(query);
+            currentQuery = query;
+            currentPage = 1;
+            homeView.classList.add('hidden');
+            searchView.classList.remove('hidden');
+            searchTitle.textContent = `Results for "${query}"`;
+            if(modalBackdrop.classList.contains('active')) closeModal();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            executeSearch(false);
+        }
+
+        // === FETCHERS ===
+        async function fetchFeatured() {
+            try {
+                const data = await fetchWithCache(APOD_API);
+                featuredData = {
+                    type: data.media_type === 'video' ? 'video' : 'image',
+                    title: data.title, desc: data.explanation,
+                    date: new Date(data.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                    source: 'NASA APOD', authors: data.copyright || 'NASA', thumb: data.thumbnail_url || data.url, mediaUrl: data.hdurl || data.url, link: null
+                };
+                document.getElementById('featuredTitle').textContent = featuredData.title;
+                document.getElementById('featuredDesc').textContent = featuredData.desc;
+                const mediaContainer = document.getElementById('featuredMedia');
+                if (data.media_type === 'video') mediaContainer.innerHTML = `<iframe src="${data.url}" frameborder="0" allowfullscreen></iframe>`;
+                else mediaContainer.innerHTML = `<img src="${data.hdurl || data.url}" alt="${data.title}">`;
+            } catch (error) {
+                document.getElementById('featuredTitle').textContent = "Archive Unavailable";
+                document.getElementById('featuredDesc').textContent = "Unable to connect to the daily archive at this time.";
+                document.getElementById('featuredMedia').innerHTML = '';
+            }
+        }
+
+        function openFeaturedModal() { if(featuredData) openModal(featuredData); }
+
+        // Enhanced Cosmic Birthday Fetcher
+        async function fetchBirthdayPhoto() {
+            const dateInput = document.getElementById('dobInput').value;
+            const btn = document.getElementById('cbBtn');
+            if (!dateInput) { alert("Please select a valid date."); return; }
+            
+            btn.innerHTML = `<div class="spinner" style="width:16px; height:16px; margin:0; border-width:2px; border-top-color:#fff;"></div>`;
+            
+            try {
+                let apodData = null;
+                try {
+                    const response = await fetchWithCache(`${APOD_API}&date=${dateInput}`);
+                    if(!response.code || response.code !== 400) apodData = response;
+                } catch(e) {}
+
+                if (apodData && apodData.title) {
+                    const birthdayData = {
+                        type: apodData.media_type === 'video' ? 'video' : 'image',
+                        title: `APOD: ${apodData.title}`, desc: apodData.explanation,
+                        date: new Date(apodData.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                        source: 'NASA APOD', authors: apodData.copyright || 'NASA', 
+                        thumb: apodData.thumbnail_url || apodData.url, mediaUrl: apodData.hdurl || apodData.url, link: null
+                    };
+                    openModal(birthdayData);
+                } else {
+                    // Fallback: Fetch a verified historical image from the birth year
+                    const year = dateInput.split('-')[0];
+                    const fallbackRes = await fetchWithCache(`${NASA_API}q=space&year_start=${year}&year_end=${year}&media_type=image`);
+                    
+                    if(fallbackRes.collection.items.length > 0) {
+                        // Pick a random image from the top 10 results of that year
+                        const item = fallbackRes.collection.items[Math.floor(Math.random() * Math.min(10, fallbackRes.collection.items.length))];
+                        const formatted = formatNASAData(item, 'image');
+                        formatted.title = `Archived in ${year}: ${formatted.title}`;
+                        openModal(formatted);
+                    } else {
+                        alert("No archive found for this date or year.");
+                    }
+                }
+            } catch (error) {
+                alert("Failed to retrieve the cosmic archive for this date.");
+            }
+            btn.innerHTML = "Reveal Photo";
+        }
+
+        async function fetchCurated() {
+            showLoader(discoverGrid);
+            try {
+                const data = await fetchWithCache(NASA_API + 'q=Nebula OR Galaxy&media_type=image');
+                const items = data.collection.items.slice(0, 15);
+                discoverGrid.innerHTML = '';
+                items.forEach((item, index) => discoverGrid.appendChild(createCard(formatNASAData(item, 'image'), index, false)));
+            } catch (error) { discoverGrid.innerHTML = '<p style="color:var(--text-muted);">Failed to load curated archives.</p>'; }
+        }
+
+        async function fetchOlderNews() {
+            try {
+                const data = await fetchWithCache(`${NEWS_API}8&offset=1500`);
+                olderNewsGrid.innerHTML = '';
+                data.results.forEach((item, index) => {
+                    const formatted = {
+                        type: 'news', title: item.title, desc: item.summary || "No summary available.",
+                        date: new Date(item.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                        source: item.news_site, authors: 'Editorial Staff', thumb: item.image_url, mediaUrl: item.image_url, link: item.url
+                    };
+                    olderNewsGrid.appendChild(createCard(formatted, index, false));
+                });
+            } catch (error) { olderNewsGrid.innerHTML = '<p style="color:var(--text-muted); padding: 20px;">Failed to load historical archives.</p>'; }
+        }
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            currentPage = 1;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+            executeSearch(false);
+        }
+
+        function loadMore() { currentPage++; executeSearch(true); }
+
+        async function executeSearch(append = false) {
+            if (!append) { showLoader(searchGrid); loadMoreBtn.classList.add('hidden'); } 
+            else { loadMoreBtn.innerHTML = `<div class="spinner" style="width:20px; height:20px; margin:0; border-width:2px;"></div> Loading...`; }
+
+            let results =[];
+            const offset = (currentPage - 1) * itemsPerPage;
+
+            try {
+                if (currentTab === 'all') {
+                    const[img, vid, news, papers] = await Promise.allSettled([
+                        fetchNASA(currentQuery, 'image', 4, currentPage), fetchNASA(currentQuery, 'video', 4, currentPage),
+                        fetchNews(currentQuery, 4, offset), fetchPapers(currentQuery, 4, currentPage)
+                    ]);
+                    if(img.status === 'fulfilled') results.push(...img.value);
+                    if(vid.status === 'fulfilled') results.push(...vid.value);
+                    if(news.status === 'fulfilled') results.push(...news.value);
+                    if(papers.status === 'fulfilled') results.push(...papers.value);
+                    results.sort(() => Math.random() - 0.5);
+                } 
+                else if (currentTab === 'images') results = await fetchNASA(currentQuery, 'image', itemsPerPage, currentPage);
+                else if (currentTab === 'videos') results = await fetchNASA(currentQuery, 'video', itemsPerPage, currentPage);
+                else if (currentTab === 'news') results = await fetchNews(currentQuery, itemsPerPage, offset);
+                else if (currentTab === 'papers') results = await fetchPapers(currentQuery, itemsPerPage, currentPage);
+
+                if (!append) searchGrid.innerHTML = '';
+                
+                if (results.length === 0 && !append) {
+                    searchGrid.innerHTML = `<p style="color:var(--text-muted); grid-column: 1/-1; font-size: 1.1rem; padding: 40px 0;">No records found across global agencies for "${currentQuery}".</p>`;
+                    loadMoreBtn.classList.add('hidden');
+                } else {
+                    results.forEach((item, index) => searchGrid.appendChild(createCard(item, index)));
+                    loadMoreBtn.innerHTML = `Load More Archives`;
+                    loadMoreBtn.classList.remove('hidden');
+                    if(results.length < (currentTab === 'all' ? 16 : itemsPerPage)) loadMoreBtn.classList.add('hidden');
+                }
+            } catch (error) {
+                if(!append) searchGrid.innerHTML = `<p style="color:var(--text-muted); grid-column: 1/-1;">An error occurred while accessing the databases.</p>`;
+                loadMoreBtn.classList.add('hidden');
+            }
+        }
+
+        async function fetchNASA(query, type, limit, page) {
+            const data = await fetchWithCache(`${NASA_API}q=${encodeURIComponent(query)}&media_type=${type}&page=${page}`);
+            return data.collection.items.slice(0, limit).map(item => formatNASAData(item, type));
+        }
+
+        function formatNASAData(item, type) {
+            const info = item.data[0];
+            let thumbUrl = item.links ? item.links[0].href : '';
+            
+            let mediaUrl = '';
+            if (type === 'image') {
+                // Optimized: Use ~large.jpg instead of ~orig.jpg to save bandwidth and prevent browser crashes
+                mediaUrl = `https://images-assets.nasa.gov/image/${info.nasa_id}/${info.nasa_id}~large.jpg`;
+            } else if (type === 'video') {
+                mediaUrl = item.href; 
+            }
+
+            return {
+                type: type, title: info.title, desc: info.description || "No detailed description provided by the agency.",
+                date: new Date(info.date_created).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+                source: 'NASA Library', authors: info.center || info.photographer || 'NASA', thumb: thumbUrl, mediaUrl: mediaUrl, link: null
+            };
+        }
+
+        async function fetchNews(query, limit, offset) {
+            const data = await fetchWithCache(`${NEWS_API}${limit}&offset=${offset}&search=${encodeURIComponent(query)}`);
+            return data.results.map(item => ({
+                type: 'news', title: item.title, desc: item.summary || "No summary available.",
+                date: new Date(item.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+                source: item.news_site, authors: 'Editorial Staff', thumb: item.image_url, mediaUrl: item.image_url, link: item.url
+            }));
+        }
+
+        async function fetchPapers(query, limit, page) {
+            const data = await fetchWithCache(`${OPENALEX_API}${encodeURIComponent(query)}&per-page=${limit}&page=${page}`);
+            return data.results.map(work => {
+                let abstractText = "No abstract provided by the publisher.";
+                if (work.abstract_inverted_index) {
+                    const words = [];
+                    for (const [word, positions] of Object.entries(work.abstract_inverted_index)) {
+                        for (const pos of positions) words[pos] = word;
+                    }
+                    abstractText = words.join(' ');
+                }
+                return {
+                    type: 'paper', title: work.title, desc: abstractText,
+                    date: work.publication_date ? new Date(work.publication_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown Date',
+                    source: work.primary_location?.source?.display_name || 'OpenAlex',
+                    authors: (work.authorships && work.authorships.length > 0) ? work.authorships.map(a => a.author.display_name).join(', ') : 'Various Researchers',
+                    thumb: '', mediaUrl: work.open_access?.is_oa ? work.open_access.oa_url : work.doi, link: work.doi || work.id
+                };
+            });
+        }
+
+        // === CARD CREATION ===
+        function createCard(data, index = 0, applySpan = true) {
+            const card = document.createElement('div');
+            card.className = `card ${data.type}`;
+            if (applySpan && index % 5 === 0 && index !== 0) card.classList.add('span-2');
+            card.style.animationDelay = `${(index % 10) * 0.05}s`;
+
+            const iconMap = { 'video': '#icon-video', 'image': '#icon-image', 'paper': '#icon-paper', 'news': '#icon-news' };
+            const iconHtml = `<div class="card-icon-badge"><svg><use href="${iconMap[data.type]}"></use></svg></div>`;
+
+            let visualHTML = data.type === 'paper' 
+                ? `<div class="card-image-wrapper">${iconHtml}<svg class="main-icon"><use href="#icon-paper"></use></svg></div>` 
+                : `<div class="card-image-wrapper">${iconHtml}<img src="${data.thumb}" alt="Thumbnail" loading="lazy" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23111\\'/></svg>'"></div>`;
+
+            card.innerHTML = `
+                ${visualHTML}
+                <div class="card-meta">
+                    <span class="label">${data.date}</span>
+                    <span class="label" style="color:var(--text-main)">${data.source.split(' ')[0]}</span>
+                </div>
+                <h3 class="card-title">${data.title}</h3>
+            `;
+            card.onclick = () => openModal(data);
+            return card;
+        }
+
+        // === UNIFIED E-READER MODAL LOGIC ===
+        async function openModal(data) {
+            if (modalBackdrop.classList.contains('active')) {
+                modalContentWrapper.classList.add('fade-out');
+                modalVisual.style.opacity = '0';
+                if(relatedDrawer.classList.contains('active')) toggleRelatedDrawer();
+                
+                setTimeout(() => {
+                    populateModalData(data);
+                    modalContentWrapper.classList.remove('fade-out');
+                    modalVisual.style.opacity = '1';
+                    modalContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 300);
+            } else {
+                populateModalData(data);
+                modalBackdrop.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                modalContainer.scrollTop = 0;
+            }
+        }
+
+        async function populateModalData(data) {
+            stopTTS(); 
+            currentModalData = data;
+            
+            modalTitle.textContent = data.title;
+            modalDate.textContent = data.date;
+            modalSource.textContent = data.source;
+            modalAuthors.textContent = data.authors;
+            
+            const iconMap = { 'video': '#icon-video', 'image': '#icon-image', 'paper': '#icon-paper', 'news': '#icon-news' };
+            modalNavIcon.innerHTML = `<use href="${iconMap[data.type]}"></use>`;
+            
+            const cleanText = data.desc.replace(/<[^>]*>?/gm, ''); 
+            const paragraphs = cleanText.split('\n').filter(p => p.trim().length > 0);
+            modalDesc.innerHTML = paragraphs.map(p => `<p style="margin-bottom: 25px;">${p}</p>`).join('');
+
+            const wordCount = cleanText.split(/\s+/).length;
+            const readTimeMins = Math.max(1, Math.ceil(wordCount / 200));
+            readTimeEl.textContent = `${readTimeMins} min`;
+
+            generateRelatedTags(data.title);
+
+            if (data.link || (data.type === 'paper' && data.mediaUrl)) {
+                modalLink.href = data.mediaUrl || data.link;
+                modalLink.innerHTML = `<svg><use href="#icon-link"></use></svg> ${data.type === 'paper' ? 'Read Full Paper (DOI/PDF)' : 'Read Full Article on Source'}`;
+                modalLink.classList.remove('hidden');
+            } else {
+                modalLink.classList.add('hidden');
+            }
+
+            modalVisual.className = 'modal-hero';
+            modalVisual.innerHTML = '<div class="spinner"></div>';
+            btnOpenDrawer.classList.add('hidden');
+
+            const proViewBtnHTML = `<button class="btn-pro-view" onclick="toggleProViewer()"><svg><use href="#icon-expand"></use></svg> Expand Media</button>`;
+
+            if (data.type === 'video') {
+                try {
+                    if(data.source === 'NASA APOD') {
+                        modalVisual.innerHTML = `<iframe src="${data.mediaUrl}" frameborder="0" allowfullscreen></iframe>${proViewBtnHTML}`;
+                    } else {
+                        const urls = await fetchWithCache(data.mediaUrl);
+                        const mp4Url = urls.find(u => u.endsWith('.mp4') && (u.includes('~medium') || u.includes('~mobile'))) || urls.find(u => u.endsWith('.mp4'));
+                        
+                        if (mp4Url) {
+                            modalVisual.innerHTML = `<video controls autoplay loop><source src="${mp4Url}" type="video/mp4"></video>${proViewBtnHTML}`;
+                        } else {
+                            modalVisual.innerHTML = `<img src="${data.thumb}" alt="Video Thumbnail">${proViewBtnHTML}`;
+                        }
+                    }
+                    fetchRelatedDrawerContent(data.title, 'video');
+                } catch (e) { 
+                    modalVisual.innerHTML = `<img src="${data.thumb}" alt="Video Thumbnail">${proViewBtnHTML}`; 
+                }
+            } 
+            else if (data.type === 'paper') {
+                modalVisual.classList.add('text-mode');
+                modalVisual.innerHTML = `<span class="label" style="margin-bottom: 20px; color: var(--accent);"><svg><use href="#icon-paper"></use></svg> Research Paper Archive</span><h2 class="display">${data.title}</h2>`;
+            } 
+            else {
+                // Image: Uses optimized ~large.jpg, with a robust fallback to the thumbnail if it fails
+                modalVisual.innerHTML = `<img src="${data.mediaUrl}" alt="Media" onerror="this.onerror=null; this.src='${data.thumb}';">${proViewBtnHTML}`;
+                fetchRelatedDrawerContent(data.title, 'image');
+            }
+        }
+
+        function closeModal() {
+            stopTTS();
+            if(modalVisual.classList.contains('cinema-mode')) toggleProViewer();
+            if(relatedDrawer.classList.contains('active')) toggleRelatedDrawer();
+            
+            modalBackdrop.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            setTimeout(() => { modalVisual.innerHTML = ''; }, 400); 
+        }
+
+        // === PRO VIEWER (CINEMA MODE) ===
+        function toggleProViewer() {
+            modalVisual.classList.toggle('cinema-mode');
+            const btn = modalVisual.querySelector('.btn-pro-view');
+            if(modalVisual.classList.contains('cinema-mode')) {
+                btn.innerHTML = `<svg><use href="#icon-close"></use></svg> Exit Full Screen`;
+            } else {
+                btn.innerHTML = `<svg><use href="#icon-expand"></use></svg> Expand Media`;
+            }
+        }
+
+        // === RELATED DRAWER LOGIC ===
+        function toggleRelatedDrawer() {
+            relatedDrawer.classList.toggle('active');
+        }
+
+        async function fetchRelatedDrawerContent(title, type) {
+            const words = title.split(' ').filter(w => w.length > 3).slice(0, 2).join(' ');
+            if(!words) return;
+            try {
+                const data = await fetchWithCache(`${NASA_API}q=${encodeURIComponent(words)}&media_type=${type}&page=1`);
+                const items = data.collection.items.slice(1, 8); 
+                if(items.length > 0) {
+                    drawerContent.innerHTML = '';
+                    items.forEach(item => {
+                        const formatted = formatNASAData(item, type);
+                        const card = document.createElement('div');
+                        card.className = 'drawer-card';
+                        card.innerHTML = `
+                            <img src="${formatted.thumb}" alt="Thumb">
+                            <div class="drawer-card-info">
+                                <h4 class="drawer-card-title">${formatted.title}</h4>
+                                <span class="drawer-card-meta">${formatted.date}</span>
+                            </div>
+                        `;
+                        card.onclick = () => openModal(formatted);
+                        drawerContent.appendChild(card);
+                    });
+                    btnOpenDrawer.classList.remove('hidden');
+                }
+            } catch(e) { console.log("No related content found."); }
+        }
+
+        // === E-READER FEATURES (TTS, FONT, FOCUS) ===
+        function initVoices() {
+            const voices = synth.getVoices();
+            if (!voices.length) return;
+            preferredVoice = voices.find(v => v.name.includes('Premium') && v.lang.startsWith('en')) ||
+                             voices.find(v => v.name.includes('Google UK English')) ||
+                             voices.find(v => v.lang.startsWith('en')) || voices[0];
+        }
+        if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = initVoices;
+
+        function toggleTTS() {
+            if (isPlaying) {
+                synth.cancel();
+                isPlaying = false;
+                ttsBtn.innerHTML = `<svg width="14" height="14" id="ttsIcon"><use href="#icon-play"></use></svg> Listen`;
+                ttsStatus.innerHTML = `Estimated time: <span id="readTime">${readTimeEl.textContent}</span>`;
+            } else {
+                const textToRead = `${modalTitle.textContent}. ${modalDesc.innerText}`;
+                ttsUtterance = new SpeechSynthesisUtterance(textToRead);
+                if (preferredVoice) ttsUtterance.voice = preferredVoice;
+                ttsUtterance.rate = 0.95; 
+                
+                ttsUtterance.onend = () => {
+                    isPlaying = false;
+                    ttsBtn.innerHTML = `<svg width="14" height="14" id="ttsIcon"><use href="#icon-play"></use></svg> Listen`;
+                    ttsStatus.innerHTML = `Estimated time: <span id="readTime">${readTimeEl.textContent}</span>`;
+                };
+
+                synth.speak(ttsUtterance);
+                isPlaying = true;
+                ttsBtn.innerHTML = `<svg width="14" height="14" id="ttsIcon"><use href="#icon-stop"></use></svg> Stop`;
+                ttsStatus.innerHTML = `Playing audio...`;
+            }
+        }
+
+        function stopTTS() {
+            if (synth.speaking) {
+                synth.cancel();
+                isPlaying = false;
+                ttsBtn.innerHTML = `<svg width="14" height="14" id="ttsIcon"><use href="#icon-play"></use></svg> Listen`;
+            }
+        }
+
+        function applySavedFontSize() {
+            modalMainArticle.classList.remove('text-sm', 'text-lg');
+            if (fontClasses[currentFontSize]) modalMainArticle.classList.add(fontClasses[currentFontSize]);
+        }
+
+        function changeFontSize(step) {
+            if (fontClasses[currentFontSize]) modalMainArticle.classList.remove(fontClasses[currentFontSize]);
+            currentFontSize = Math.max(0, Math.min(2, currentFontSize + step));
+            if (fontClasses[currentFontSize]) modalMainArticle.classList.add(fontClasses[currentFontSize]);
+            localStorage.setItem('comet-font-size', currentFontSize);
+        }
+
+        function toggleFocusMode() {
+            modalContainer.classList.toggle('focus-mode');
+        }
+
+        function shareArticle() {
+            const url = modalLink.href && !modalLink.classList.contains('hidden') ? modalLink.href : window.location.href;
+            if (navigator.share) {
+                navigator.share({ title: modalTitle.textContent, text: 'Check out this discovery on Comet Deep Space Editorial.', url: url }).catch(console.error);
+            } else {
+                navigator.clipboard.writeText(url);
+                alert('Link copied to clipboard!');
+            }
+        }
+
+        function generateRelatedTags(title) {
+            const stopWords =['the','and','of','in','to','a','is','for','on','with','by','an','at','from'];
+            const words = title.replace(/[^\w\s]/gi, '').split(' ');
+            const keywords = words.filter(w => w.length > 4 && !stopWords.includes(w.toLowerCase())).slice(0, 4);
+            modalTagsContainer.innerHTML = keywords.map(kw => `<span class="tag" onclick="executeOverlaySearch('${kw}')"><svg><use href="#icon-search"></use></svg> ${kw}</span>`).join('');
+        }
+    </script>
+</body>
+</html>
